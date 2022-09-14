@@ -21,28 +21,29 @@ fn runner(id: u32) {
 }
 
 fn main() {
-    // init("threads");
     let args: Vec<String> = env::args().collect();
     let n = args[1].parse::<u32>().unwrap();
+    init("threads");
 
     info!(n, "starting threads");
 
     let mut threads = Vec::new();
+
     let start = Instant::now();
     for id in 0..n {
         info!("create task");
         threads.push(thread::spawn(move || runner(id)));
     }
+    let threads_created_in = start.elapsed().as_millis();
 
     info!("waiting for threads to finish");
     for thread in threads {
         let _ = thread.join();
     }
+    let requests_completed_in = start.elapsed().as_millis();
 
-    let elapsed = start.elapsed().as_millis();
-    info!("Done in {}ms", elapsed);
-
-    println!("Done in {}ms", elapsed);
+    info!("Done in {}ms", requests_completed_in);
+    println!("{requests_completed_in}");
 
     opentelemetry::global::shutdown_tracer_provider();
 }
