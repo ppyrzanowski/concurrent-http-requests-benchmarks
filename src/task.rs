@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+#[derive(Debug)]
 pub struct TaskId(pub u32);
 
 impl Display for TaskId {

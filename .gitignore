@@ -1,2 +1,7 @@
-/target
-/server/.venv
+target/
+*/venv/
+*/.venv/
+test.csv
+results.csv
+
+*/__pycache__
