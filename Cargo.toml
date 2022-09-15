@@ -25,3 +25,4 @@ opentelemetry-jaeger = {version = "0.16.0", features = ["rt-tokio"]}
 tracing-opentelemetry = "0.17.4"
 futures = "0.3.24"
 ureq = "2.5.0"
+surf = "2.3.2"
