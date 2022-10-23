@@ -1,14 +1,5 @@
 #!/bin/bash
 
-export CLIENT_COMPILED=0
-export SERVER_IMPL="$1"
-export CLIENT_IMPL="$2"
-NUM_OF_TASKS="$3" # Number of requests to send by client
-
-# `output` holds the benchmark results seperated by comma (single-line)
-output=""
-
-
 seperator_line() {
   printf "%s\n" "---------------------------------------------------"
 }
@@ -17,7 +8,7 @@ seperator_line() {
 # TODO: export as CSV format
 write_result() {
     mkdir -p benchmarks
-    filename=benchmarks/$(date -d "today" +"%Y%m%d%H%M").log
+    filename=benchmarks/${CLIENT_IMPL}$(date -d "today" +"%Y%m%d%H%M").log
     printf "$output\n" > "$filename"
 
 }
@@ -86,33 +77,81 @@ shutdown_server() {
   printf "Shutdown server done."
 }
 
+benchmark() {
+  NUM_OF_TASKS=1
+  start_client "$CLIENT_IMPL"
+  NUM_OF_TASKS=10
+  start_client "$CLIENT_IMPL"
+  NUM_OF_TASKS=20
+  start_client "$CLIENT_IMPL" 
+  NUM_OF_TASKS=40
+  start_client "$CLIENT_IMPL"
+  NUM_OF_TASKS=80
+  start_client "$CLIENT_IMPL"
+  NUM_OF_TASKS=160
+  start_client "$CLIENT_IMPL"
+  NUM_OF_TASKS=320
+  start_client "$CLIENT_IMPL"
+}
 
-cli_message="Benchmarking number of concurrent requests sent per second in Python VS Rust\n\n."
-cli_message="${cli_message}Client: ${CLIENT_IMPL}\n"
-cli_message="${cli_message}Server: ${SERVER_IMPL}\n"
-printf "$cli_message"
-seperator_line
+# TODO: Finish later
+custom_benchmarks() {
+  cli_message="${cli_message}Running custom benchmarks.\n"
+  cli_message="${cli_message}Client: ${CLIENT_IMPL}\n"
+  cli_message="${cli_message}Server: ${SERVER_IMPL}\n"
+  printf "$cli_message"
+  seperator_line
 
-start_server "$SERVER_IMPL"
+  start_server "$SERVER_IMPL"
 
-NUM_OF_TASKS=1
-start_client "$CLIENT_IMPL"
-NUM_OF_TASKS=10
-start_client "$CLIENT_IMPL"
-NUM_OF_TASKS=20
-start_client "$CLIENT_IMPL" 
-NUM_OF_TASKS=40
-start_client "$CLIENT_IMPL"
-NUM_OF_TASKS=80
-start_client "$CLIENT_IMPL"
-NUM_OF_TASKS=160
-start_client "$CLIENT_IMPL"
-NUM_OF_TASKS=320
-start_client "$CLIENT_IMPL"
+  benchmark
 
-seperator_line
+  seperator_line
 
-shutdown_server
+  shutdown_server
 
-write_result
+  write_result
+}
 
+default_benchmarks() {
+  cli_message="${cli_message}Running default benchmarks.\n"
+  printf "$cli_message"
+  seperator_line
+
+  SERVER_IMPL="flask"
+  start_server "$SERVER_IMPL"
+
+  # -------- RUST ----------
+  CLIENT_IMPL="ureq_threads"
+  benchmark
+  seperator_line
+  write_result
+
+  # -------- Python --------
+  CLIENT_IMPL="python"
+  benchmark
+  seperator_line
+  write_result
+
+  shutdown_server
+}
+
+
+# Script entrypoint
+
+export CLIENT_COMPILED=0
+export SERVER_IMPL="$1"
+export CLIENT_IMPL="$2"
+NUM_OF_TASKS="$3" # Number of requests to send by client
+
+# `output` holds the benchmark results seperated by comma (single-line)
+output=""
+
+
+cli_message="Benchmarking number of concurrent requests sent per second in Python VS Rust.\n\n"
+
+if [[ -z $SERVER_IMPL || -z $CLIENT_IMPL ]]; then
+  default_benchmarks
+else
+  custom_benchmarks
+fi
