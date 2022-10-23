@@ -7,9 +7,7 @@ seperator_line() {
 # Writes the results to a file.
 # TODO: export as CSV format
 write_result() {
-    mkdir -p benchmarks
-    filename=benchmarks/${CLIENT_IMPL}$(date -d "today" +"%Y%m%d%H%M").log
-    printf "$output\n" > "$filename"
+    printf "$output\n" >> "$benchmark_results_path"
 
 }
 
@@ -79,10 +77,15 @@ shutdown_server() {
 
 # Benchmarks a single row
 benchmark() {
-  i=0
+  printf "Starting benchmark for ${CLIENT_IMPL}\n"
+
+  # Row-header, row-implementaion-type
+  output="${output}${CLIENT_IMPL},"
   NUM_OF_TASKS=1
   start_client "$CLIENT_IMPL"
-  while [ $i -le "$NUM_OF_BENCHMARKS" ]
+
+  i=0
+  while [ $i -lt $(($NUM_OF_BENCHMARKS-1)) ]
   do
     i=$(($i+1))
 
@@ -95,28 +98,17 @@ benchmark() {
     NUM_OF_TASKS=$((${NUM_OF_TASKS}*2))
     start_client "$CLIENT_IMPL"
   done 
-  seperator_line
 
-  write_result
+  # End of row
+  output="${output}\n"
+
+  seperator_line
 }
 
 # TODO: Finish later
 custom_benchmarks() {
-  cli_message="${cli_message}Running custom benchmarks.\n"
-  cli_message="${cli_message}Client: ${CLIENT_IMPL}\n"
-  cli_message="${cli_message}Server: ${SERVER_IMPL}\n"
-  printf "$cli_message"
-  seperator_line
-
-  start_server "$SERVER_IMPL"
-
-  benchmark
-
-  seperator_line
-
-  shutdown_server
-
-  write_result
+  printf "Not implemented."
+  exit 1
 }
 
 default_benchmarks() {
@@ -127,15 +119,20 @@ default_benchmarks() {
   SERVER_IMPL="flask"
   start_server "$SERVER_IMPL"
 
-  # -------- RUST ----------
-  CLIENT_IMPL="ureq_threads"
-  benchmark
-
-  # -------- Python --------
-  CLIENT_IMPL="python"
-  benchmark
+  sample=0
+  while [[ $sample -le $NUM_OF_SAMPLES ]]
+  do
+    for impl in "ureq_threads" "python"
+    do 
+      CLIENT_IMPL=$impl
+      benchmark
+    done
+    ((sample = sample + 1))
+  done
 
   shutdown_server
+
+  write_result
 }
 
 
@@ -144,15 +141,20 @@ default_benchmarks() {
 export CLIENT_COMPILED=0
 export SERVER_IMPL="$1"
 export CLIENT_IMPL="$2"
-NUM_OF_BENCHMARKS=4     # Number of columns with doubling number of task per column
-MAX_REQUESTS=2000       # For safety
+NUM_OF_SAMPLES=5       # Number of benchmark-cycle repetitions for avarage calculation
+NUM_OF_BENCHMARKS=10     # Number of columns with doubling number of task per column (Factor)
 NUM_OF_TASKS="${3:-1}"  # Number of requests to send by client (default: 1)
+MAX_REQUESTS=2000       # For safety
 
 # `output` holds the benchmark results seperated by comma (single-line)
 output=""
 
 
 cli_message="Benchmarking number of concurrent requests sent per second in Python VS Rust.\n\n"
+
+# Benchmark results path
+mkdir -p benchmarks
+benchmark_results_path=benchmarks/$(date -d "today" +"%Y%m%d%H%M").csv
 
 if [[ -z $SERVER_IMPL || -z $CLIENT_IMPL ]]; then
   default_benchmarks
