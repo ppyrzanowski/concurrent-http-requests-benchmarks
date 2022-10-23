@@ -77,21 +77,27 @@ shutdown_server() {
   printf "Shutdown server done."
 }
 
+# Benchmarks a single row
 benchmark() {
+  i=0
   NUM_OF_TASKS=1
   start_client "$CLIENT_IMPL"
-  NUM_OF_TASKS=10
-  start_client "$CLIENT_IMPL"
-  NUM_OF_TASKS=20
-  start_client "$CLIENT_IMPL" 
-  NUM_OF_TASKS=40
-  start_client "$CLIENT_IMPL"
-  NUM_OF_TASKS=80
-  start_client "$CLIENT_IMPL"
-  NUM_OF_TASKS=160
-  start_client "$CLIENT_IMPL"
-  NUM_OF_TASKS=320
-  start_client "$CLIENT_IMPL"
+  while [ $i -le "$NUM_OF_BENCHMARKS" ]
+  do
+    i=$(($i+1))
+
+    if [[ $NUM_OF_TASKS -gt $MAX_REQUESTS ]]
+    then
+      printf "Number of tasks ($NUM_OF_TASKS) exceeds max allowed number of reqeusts ($MAX_REQUESTS)!"
+      break
+    fi
+
+    NUM_OF_TASKS=$((${NUM_OF_TASKS}*2))
+    start_client "$CLIENT_IMPL"
+  done 
+  seperator_line
+
+  write_result
 }
 
 # TODO: Finish later
@@ -124,14 +130,10 @@ default_benchmarks() {
   # -------- RUST ----------
   CLIENT_IMPL="ureq_threads"
   benchmark
-  seperator_line
-  write_result
 
   # -------- Python --------
   CLIENT_IMPL="python"
   benchmark
-  seperator_line
-  write_result
 
   shutdown_server
 }
@@ -142,7 +144,9 @@ default_benchmarks() {
 export CLIENT_COMPILED=0
 export SERVER_IMPL="$1"
 export CLIENT_IMPL="$2"
-NUM_OF_TASKS="$3" # Number of requests to send by client
+NUM_OF_BENCHMARKS=4     # Number of columns with doubling number of task per column
+MAX_REQUESTS=2000       # For safety
+NUM_OF_TASKS="${3:-1}"  # Number of requests to send by client (default: 1)
 
 # `output` holds the benchmark results seperated by comma (single-line)
 output=""
