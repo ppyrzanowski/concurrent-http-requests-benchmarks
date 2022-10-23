@@ -3,8 +3,9 @@
 export CLIENT_COMPILED=0
 export SERVER_IMPL="$1"
 export CLIENT_IMPL="$2"
-NUM_OF_TASKS="$3"
+NUM_OF_TASKS="$3" # Number of requests to send by client
 
+# `output` holds the benchmark results seperated by comma (single-line)
 output=""
 
 
@@ -12,7 +13,8 @@ seperator_line() {
   printf "%s\n" "---------------------------------------------------"
 }
 
-# Writes the results to a file (csv)
+# Writes the results to a file.
+# TODO: export as CSV format
 write_result() {
     mkdir -p benchmarks
     filename=benchmarks/$(date -d "today" +"%Y%m%d%H%M").log
@@ -20,15 +22,18 @@ write_result() {
 
 }
 
+# Starts the server receiving our requests, the requests should be handled 
+# concurrently as well (although this is implementaion detail which we do 
+# not care about).
 start_server() {
   case "$1" in
   # flask = python flask server
   "flask")
     cd ./python-server-flask/
     . ./venv/bin/activate
-    # Redirect logs of flask app to stdout.log
     mkdir -p logs
-    flask --app server run >>./logs/stdout$(date -d "today" +"%Y%m%d%H%M").log 2>&1 & SERVER_PID=$! 
+    # Redirect logs of flask app to ./logs/{timestamp}.log
+    flask --app server run >>./logs/$(date -d "today" +"%Y%m%d%H%M").log 2>&1 & SERVER_PID=$! 
     # Wait for server to start in background
     sleep 3
     deactivate
@@ -36,10 +41,7 @@ start_server() {
     ;;
   # async = python asyncio server
   "async")
-    cd ./python-server-asyncio/
-    # . ./venv/bin/activate
-    # cd ./..
-    printf "Asyncio script branch not implemented yet\n"
+    printf "Python asyncio server script branch not implemented yet\n"
     exit 1
     ;;
   *)
@@ -48,6 +50,7 @@ start_server() {
   esac
 }
 
+# Starts the client, sending x requests as fast as possible to our server.
 start_client() {
   case "$1" in
   "ureq_threads")
@@ -59,15 +62,11 @@ start_client() {
       CLIENT_COMPILED=1
     fi
     execution_time=$( ./target/release/ureq_threads $NUM_OF_TASKS ) 
-    output=$(printf "${output}${execution_time},")
-    printf "Executed %04s request(s) in %04dms\n" $NUM_OF_TASKS $execution_time
     ;;
   "python")
     cd ./python-client/
     . ./venv/bin/activate
-    execution_time=$(python client.py $NUM_OF_TASKS)
-    output=$(printf "${output}${execution_time},")
-    printf "Executed %04s request(s) in %04dms\n" $NUM_OF_TASKS $execution_time
+    execution_time=$( python client.py $NUM_OF_TASKS )
     deactivate
     cd ./..
     ;;
@@ -76,17 +75,22 @@ start_client() {
     return 1
     ;;
   esac 
+
+  output=$(printf "${output}${execution_time},")
+  printf "Executed %04s request(s) in %04dms\n" $NUM_OF_TASKS $execution_time
 }
 
+# Stop the server after benchmarks are done.
 shutdown_server() {
   kill "$SERVER_PID"
   printf "Shutdown server done."
 }
 
-text="Benchmarking number of concurrent requests sent per second in Python VS Rust\n\n"
-text="${text}Client: ${CLIENT_IMPL}\n"
-text="${text}Server: ${SERVER_IMPL}\n"
-printf "$text"
+
+cli_message="Benchmarking number of concurrent requests sent per second in Python VS Rust\n\n."
+cli_message="${cli_message}Client: ${CLIENT_IMPL}\n"
+cli_message="${cli_message}Server: ${SERVER_IMPL}\n"
+printf "$cli_message"
 seperator_line
 
 start_server "$SERVER_IMPL"
@@ -111,3 +115,4 @@ seperator_line
 shutdown_server
 
 write_result
+
