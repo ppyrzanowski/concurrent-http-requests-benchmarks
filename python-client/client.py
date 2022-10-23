@@ -1,9 +1,10 @@
 import requests
 import threading
 import logging
-import time
 from timeit import default_timer as timer
-from datetime import timedelta
+from datetime import timedelta, datetime
+import sys
+from pathlib import Path
 
 def thread_function(name):
     # logging.info("Thread %s: starting", name)
@@ -17,9 +18,18 @@ def thread_function(name):
 
 
 def main():
-    t = 500
-    format = "%(asctime)s.%(msecs)03d: %(message)s"
-    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+    t = int(sys.argv[1])
+    # format = "%(asctime)s.%(msecs)03d: %(message)s"
+    format = '%(asctime)s.%(msecs)d %(name)s %(levelname)s %(message)s'
+    Path("./logs").mkdir(parents=True, exist_ok=True)
+    filepath = f"logs/{datetime.now().strftime('%Y%m%d%H%M')}.log"
+    logging.basicConfig(
+        filename=filepath,
+        filemode="a",
+        format=format,
+        level=logging.INFO,
+        datefmt="%H:%M:%S"
+    )
 
     logging.info(f"Main    : creating {t} threads")
 
@@ -39,8 +49,11 @@ def main():
         # logging.info("Main    : thread %d done", index)
 
     end = timer()
-    elapsed = end - start
-    logging.info(f"Main    : all threads done in {timedelta(seconds=elapsed)}")
+    elapsed = timedelta(seconds=end - start)
+    elapsed_ms = int(elapsed.total_seconds() * 1000)
+
+    logging.info(f"Main    : all threads done in {elapsed} ({elapsed_ms})")
+    print(elapsed_ms)
 
     return
     

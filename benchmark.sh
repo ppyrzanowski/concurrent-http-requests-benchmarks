@@ -14,6 +14,7 @@ seperator_line() {
 
 # Writes the results to a file (csv)
 write_result() {
+    mkdir -p benchmarks
     filename=benchmarks/$(date -d "today" +"%Y%m%d%H%M").log
     printf "$output\n" > "$filename"
 
@@ -26,7 +27,8 @@ start_server() {
     cd ./python-server-flask/
     . ./venv/bin/activate
     # Redirect logs of flask app to stdout.log
-    flask --app server run >>stdout.log 2>&1 & SERVER_PID=$! 
+    mkdir -p logs
+    flask --app server run >>./logs/stdout$(date -d "today" +"%Y%m%d%H%M").log 2>&1 & SERVER_PID=$! 
     # Wait for server to start in background
     sleep 3
     deactivate
@@ -63,7 +65,9 @@ start_client() {
   "python")
     cd ./python-client/
     . ./venv/bin/activate
-    time python client.py
+    execution_time=$(python client.py $NUM_OF_TASKS)
+    output=$(printf "${output}${execution_time},")
+    printf "Executed %04s request(s) in %04dms\n" $NUM_OF_TASKS $execution_time
     deactivate
     cd ./..
     ;;

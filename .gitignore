@@ -4,5 +4,6 @@ target/
 test.csv
 results.csv
 benchmarks/
+*/logs/
 
 */__pycache__
