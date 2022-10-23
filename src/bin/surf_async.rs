@@ -33,16 +33,16 @@ fn init_tracing(name: &str) {
 async fn runner(id: u32) {
     info!("start request");
     let start = Instant::now();
-    let mut res = surf::get(&format!("http://127.0.0.1:5000/sleep/{id}"))
+    let mut res = reqwest::get(&format!("http://127.0.0.1:5000/sleep/{id}"))
         .await
         .unwrap();
-    let body = res.body_string().await.unwrap();
+    // let body = res.text().await.unwrap();
     let elapsed = start.elapsed().as_millis();
 
     info!(
         status = res.status().to_string(),
         elapsed_ms = elapsed,
-        result = body,
+        // result = body,
         "response"
     );
 }

@@ -1,9 +1,21 @@
+use clap::Parser;
 use std::{env, error::Error, thread, time::Instant};
 use ureq;
 
 use opentelemetry::global;
 use tracing::{info, span};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
+
+#[derive(Parser, Debug)]
+struct Args {
+    /// Number of concurrent requests to send
+    #[clap(value_parser)]
+    n: u16,
+
+    /// Send tracing to jaeger at 1.0.0.127:5000
+    #[clap(short, long, value_parser)]
+    trace: bool,
+}
 
 fn init_tracing(name: &str) {
     // Allows you to pass along context (i.e., trace IDs) across services
@@ -45,11 +57,16 @@ fn runner(id: u32) {
     );
 }
 
-fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+fn main() {
     let args: Vec<String> = env::args().collect();
-    let n = args[1].parse::<u32>().unwrap();
+    let args = Args::parse();
 
-    init_tracing("ureq_threads");
+    // let n = args[1].parse::<u32>().unwrap();
+    let n = args.n;
+
+    if args.trace {
+        init_tracing("ureq_threads");
+    }
 
     let result = {
         let root = span!(tracing::Level::INFO, "app_start", work_units = 2);
@@ -60,7 +77,7 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
         let mut threads = Vec::new();
 
         let start = Instant::now();
-        for id in 0..n {
+        for id in 0..n as u32 {
             // info!("create task");
             let parent_span = root.clone();
             threads.push(thread::spawn(move || {
@@ -81,6 +98,4 @@ fn main() -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
 
     println!("{result}");
     opentelemetry::global::shutdown_tracer_provider();
-
-    Ok(())
 }

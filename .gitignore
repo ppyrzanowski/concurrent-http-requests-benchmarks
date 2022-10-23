@@ -3,5 +3,6 @@ target/
 */.venv/
 test.csv
 results.csv
+benchmarks/
 
 */__pycache__
