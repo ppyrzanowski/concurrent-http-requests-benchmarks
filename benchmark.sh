@@ -66,7 +66,7 @@ write_result() {
 start_server() {
   case "$SERVER_IMPL" in
   "python-flask")
-    . ./python-server-flask/venv/bin/activate
+    . ./python-server-flask/env/bin/activate
     mkdir -p ./python-server-flask/logs
     # Redirect logs of flask app
     flask --app ./python-server-flask/server run >>./python-server-flask/logs/$(date -d "today" +"%Y%m%d%H%M").log 2>&1 & SERVER_PID=$! 
@@ -116,7 +116,7 @@ start_client() {
     ;;
   "python")
     # trap "clean_up_python; interrupt_handler" "INT"
-    . ./python-client/venv/bin/activate
+    . ./python-client/env/bin/activate
     EXECUTION_TIME=$( python ./python-client/client.py $NUM_OF_TASKS )
     ;;
   *)
