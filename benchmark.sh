@@ -53,7 +53,7 @@ print_benchmark_title() {
 # Writes the results to a file.
 write_result() {
   printf "Written output to ${BENCHMARK_RESULTS_FILEPATH}\n"
-  printf "$OUTPUT\n" >> "$BENCHMARK_RESULTS_FILEPATH"
+  printf "$OUTPUT\n\n" >> "$BENCHMARK_RESULTS_FILEPATH"
 }
 
 
@@ -109,10 +109,10 @@ start_client() {
     if [[ $CLIENT_COMPILED -lt 1 ]]; then
       printf "(Compiling client...)\n"
       export RUSTFLAGS="$RUSTFLAGS -Awarnings"
-      cargo build -r --bin ureq_threads
+      cargo build -r --manifest-path ./rust-client/Cargo.toml --bin ureq_threads
       CLIENT_COMPILED=1
     fi
-    EXECUTION_TIME=$( ./target/release/ureq_threads $NUM_OF_TASKS ) 
+    EXECUTION_TIME=$( ./rust-client/target/release/ureq_threads $NUM_OF_TASKS ) 
     ;;
   "python")
     # trap "clean_up_python; interrupt_handler" "INT"
