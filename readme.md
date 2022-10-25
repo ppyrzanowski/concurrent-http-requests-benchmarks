@@ -1,7 +1,7 @@
 # concurrent_http_requests_benchmarks 
 
 Benchmarking performance of x concurrent requests sent per second by given implementation.
-All commands can be found in the (justfile)[./justfile]
+All commands can be found in the [justfile](./justfile)
 
 ## Current client implementations:
 
@@ -10,28 +10,27 @@ All commands can be found in the (justfile)[./justfile]
 | Python            | threading            | requests           |
 | Rust              | async (tokio)        | ureq               |
 |                   |                      |                    |
-|-------------------|----------------------|--------------------|
 
 
 ## Write an implementation
 Read more about how to add another another language implementation (A language in combination with
 a parallelism model and a http client). Further docs can be found in the 
-(benchmark bash script)[./benchmark.sh].
+[benchmark bash script](./benchmark.sh).
 
 
 ## Installation (Linux only)
 
-- Install [_just_](https://github.com/casey/just) command runner
+- Install [_just_](https://github.com/casey/just) command runner:
 ```bash
 cargo install just
 ```
 
-- Install virtual environments for python
+- Install virtual environments for python:
 ```bash
 just install-python-env
 ```
 
-- Run benchmarks
+- Run benchmarks:
 ```bash
 just benchmark
 
@@ -41,12 +40,14 @@ just benchmark
 
 ## TODO
 
-- Create small blog-post or writeup
-- Rewrite benchmark script with python for cross platform testing
-- Rewrite just recipes with python
+- Create small blog-post or writeup.
+- Rewrite benchmark script with python for cross platform testing.
+- Rewrite just recipes with python.
 
 
 ---
+_Don't mind the notes below_
+
 
 ## SYSTEM CHANGES FOR FLAMEGRAPH PROFILING
 > For my own sanity
