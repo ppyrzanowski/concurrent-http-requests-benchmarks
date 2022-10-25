@@ -37,8 +37,8 @@ print_benchmark_title() {
 
 # Writes the results to a file.
 write_result() {
-    printf "Written output to ${benchmark_results_path}\n"
-    printf "$output\n" >> "$benchmark_results_path"
+    printf "Written output to ${BENCHMARK_RESULTS_FILEPATH}\n"
+    printf "$OUTPUT\n" >> "$BENCHMARK_RESULTS_FILEPATH"
 }
 
 # Starts the server receiving our requests, the requests should be handled 
@@ -92,7 +92,7 @@ start_client() {
     ;;
   esac 
 
-  output=$(printf "${output}${execution_time},")
+  OUTPUT=$(printf "${OUTPUT}${execution_time},")
   printf "Executed %04s request(s) in %04dms\n" $NUM_OF_TASKS $execution_time
 }
 
@@ -104,17 +104,17 @@ shutdown_server() {
   fi
 }
 
-# Benchmarks a single row
+# Creates a single CSV row
 benchmark() {
   print_benchmark_title
 
   # Row-header, row-implementaion-type
-  output="${output}${CLIENT_IMPL},"
-  NUM_OF_TASKS=1
-  start_client "$CLIENT_IMPL"
+  OUTPUT="${OUTPUT}${CLIENT_IMPL},"
+
+  NUM_OF_TASKS=$TASKS_BASE_COUNT
 
   i=0
-  while [ $i -lt $(($NUM_OF_BENCHMARKS-1)) ]
+  while [ $i -lt $(($NUM_OF_BENCHMARKS)) ]
   do
     i=$(($i+1))
 
@@ -124,38 +124,42 @@ benchmark() {
       break
     fi
 
-    NUM_OF_TASKS=$((${NUM_OF_TASKS}*2))
     start_client "$CLIENT_IMPL"
+    NUM_OF_TASKS=$((${NUM_OF_TASKS}*2))
   done 
 
   # End of row
-  output="${output}\n"
+  OUTPUT="${OUTPUT}\n"
 
   seperator_line
 }
 
 # Executes all predefined benchmarks
 default_benchmarks() {
+  # Interruption handlers
   # fires on `kill $$` and `exit`
   trap exit_handler EXIT
   trap interrupt_handler INT
 
-  cli_message="${cli_message}Running default benchmarks.\n"
-  printf "$cli_message"
+  local CLI_MESSAGE="\nBenchmarking number of concurrent requests sent per second in Python VS Rust.\n\n"
+  CLI_MESSAGE="${CLI_MESSAGE}Running default benchmarks.\n"
+  printf "$CLI_MESSAGE"
   seperator_line
 
+  # Start server in background process
   SERVER_IMPL="flask"
   start_server "$SERVER_IMPL"
 
-  sample=0
-  while [[ $sample -le $NUM_OF_SAMPLES ]]
+  # Run Benchmarks against the server
+  SAMPLE=0
+  while [[ $SAMPLE -lt $NUM_OF_SAMPLES ]]
   do
     for impl in "ureq_threads" "python"
     do 
       CLIENT_IMPL=$impl
       benchmark
     done
-    ((sample = sample + 1))
+    ((SAMPLE = SAMPLE + 1))
   done
   exit 0
 }
@@ -163,23 +167,22 @@ default_benchmarks() {
 
 # Script entrypoint
 
-export CLIENT_COMPILED=0  # 1 - If the rust client was already compiled by previous benchmark iteration
+export CLIENT_COMPILED=0    # 1 - If the rust client was already compiled by previous benchmark iteration
 export SERVER_IMPL=""
 export CLIENT_IMPL=""
-NUM_OF_SAMPLES=2          # Number of benchmark-cycle repetitions for avarage calculation
-NUM_OF_BENCHMARKS=2       # Number of columns with doubling number of task per column (Factor)
-# NUM_OF_TASKS="${3:-1}"    # Number of requests to send by client (default: 1)
-MAX_REQUESTS=2000         # For safety, max allowed number of requests to try send at once
 
-# `output` holds the benchmark results seperated by comma (CSV)
-output=""
+TASKS_BASE_COUNT="${1:-1}"  # Start number of requests to send by client (arg1 ( $arg1 <= $MAX_REQUESTS ) 
+                            # otherwise default is 1; )
+NUM_OF_SAMPLES=2            # Number of benchmark-cycle repetitions for avarage calculation
+NUM_OF_BENCHMARKS=2         # Number of columns with doubling number of task per column (Factor)
+MAX_REQUESTS=2000           # For safety, max allowed number of requests to try send at once
 
+OUTPUT=""                   # Holds the benchmark results seperated by comma (CSV)
 
-cli_message="\nBenchmarking number of concurrent requests sent per second in Python VS Rust.\n\n"
 
 # Benchmark results path
 mkdir -p benchmarks
-benchmark_results_path=benchmarks/$(date -d "today" +"%Y%m%d%H%M").csv
-touch "$benchmark_results_path"
+BENCHMARK_RESULTS_FILEPATH="benchmarks/$(date -d "today" +"%Y%m%d%H%M").csv"
+touch "$BENCHMARK_RESULTS_FILEPATH"
 
 default_benchmarks
