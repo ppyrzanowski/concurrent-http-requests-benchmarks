@@ -169,6 +169,12 @@ default_benchmarks() {
 # BENCHMARK SCRIPT ENTRYPOINT
 # ---------------------------
 
+# An implementation:
+# - must print the total execution time to `stdout` in milliseconds as integer.
+# - should only take one CLI argument, defining the amount of requests (threads/tasks) to execute concurrently.
+# - should write logs to their own logger/filehandler located at 
+#   `./client-<impl.>/logs/$(date -d "today" +"%Y%m%d%H%M").log`.
+
 
 # Configuration variables
 MAX_REQUESTS=2000           # For safety, max allowed number of requests to try send at once
@@ -187,3 +193,4 @@ BENCHMARK_RESULTS_FILEPATH="benchmarks/$(date -d "today" +"%Y%m%d%H%M").csv"
 touch "$BENCHMARK_RESULTS_FILEPATH"
 
 default_benchmarks
+
