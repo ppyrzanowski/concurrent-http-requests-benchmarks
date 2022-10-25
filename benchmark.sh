@@ -1,5 +1,10 @@
 #!/bin/bash
 
+
+# ----------------
+# SPECIAL HANDLERS
+# ----------------
+
 clean_up () {
   shutdown_server
   write_result
@@ -21,6 +26,11 @@ interrupt_handler () {
   exit 1
 }
 
+
+# -----
+# CLI utils
+# -----
+
 # Shell seperator for better readability
 seperator_line() {
   printf "%s\n" "--------------------------------------------------------------"
@@ -32,8 +42,13 @@ print_benchmark_title() {
   A="[Benchmark]${A}"
   B="$CLIENT_IMPL"
 
-  echo "${A:0:-${#B}} $B"
+  printf "${A:0:-${#B}} $B\n"
 }
+
+
+# -----------
+# Output handler
+# -----------
 
 # Writes the results to a file.
 write_result() {
@@ -41,13 +56,16 @@ write_result() {
     printf "$OUTPUT\n" >> "$BENCHMARK_RESULTS_FILEPATH"
 }
 
+
+# -----------------------
+# Server-runner functions
+# -----------------------
+
 # Starts the server receiving our requests, the requests should be handled 
-# concurrently as well (although this is implementaion detail which we do 
-# not care about).
+# concurrently as well (although this is implementaion detail about the server which we do not care about).
 start_server() {
-  case "$1" in
-  # flask = python flask server
-  "flask")
+  case "$SERVER_IMPL" in
+  "python-flask")
     . ./python-server-flask/venv/bin/activate
     mkdir -p ./python-server-flask/logs
     # Redirect logs of flask app
@@ -56,44 +74,17 @@ start_server() {
     sleep 3
     deactivate
     ;;
-  # async = python asyncio server
-  "async")
+  "python-async")
     printf "Python asyncio server script branch not implemented yet\n"
     exit 1
     ;;
   *)
-    printf "Please provide backend type (flask | async)\n"
+    # Restore default exit handler
+    trap EXIT
+    printf "Invalid backend implementation option (${SERVER_IMPL}).\n"
     exit 1
     ;;
   esac
-}
-
-# Starts the client, sending x requests as fast as possible by given implementaion to our server.
-start_client() {
-  case "$1" in
-  "ureq_threads")
-    # Compile client once
-    if [[ $CLIENT_COMPILED -lt 1 ]]; then
-      printf "(Compiling client...)\n"
-      export RUSTFLAGS="$RUSTFLAGS -Awarnings"
-      cargo build -r --bin ureq_threads
-      CLIENT_COMPILED=1
-    fi
-    execution_time=$( ./target/release/ureq_threads $NUM_OF_TASKS ) 
-    ;;
-  "python")
-    # trap "clean_up_python; interrupt_handler" "INT"
-    . ./python-client/venv/bin/activate
-    execution_time=$( python ./python-client/client.py $NUM_OF_TASKS )
-    ;;
-  *)
-    printf "Please provide client type (ureq_threads | python)\n"
-    exit 1
-    ;;
-  esac 
-
-  OUTPUT=$(printf "${OUTPUT}${execution_time},")
-  printf "Executed %04s request(s) in %04dms\n" $NUM_OF_TASKS $execution_time
 }
 
 # Stop the server after benchmarks are done.
@@ -104,19 +95,57 @@ shutdown_server() {
   fi
 }
 
+
+# ----------------------
+# Client-runnerfunctions
+# ----------------------
+
+# Starts the client, sending x requests as fast as possible by given implementaion to our server.
+start_client() {
+  local EXECUTION_TIME=0
+  case "$CLIENT_IMPL" in
+  "ureq_threads")
+    # Compile client once
+    if [[ $CLIENT_COMPILED -lt 1 ]]; then
+      printf "(Compiling client...)\n"
+      export RUSTFLAGS="$RUSTFLAGS -Awarnings"
+      cargo build -r --bin ureq_threads
+      CLIENT_COMPILED=1
+    fi
+    EXECUTION_TIME=$( ./target/release/ureq_threads $NUM_OF_TASKS ) 
+    ;;
+  "python")
+    # trap "clean_up_python; interrupt_handler" "INT"
+    . ./python-client/venv/bin/activate
+    EXECUTION_TIME=$( python ./python-client/client.py $NUM_OF_TASKS )
+    ;;
+  *)
+    printf "Please provide client type (ureq_threads | python)\n"
+    exit 1
+    ;;
+  esac 
+
+  OUTPUT=$(printf "${OUTPUT}${EXECUTION_TIME},")
+  printf "Executed %04s request(s) in %04dms\n" $NUM_OF_TASKS $EXECUTION_TIME
+}
+
+
+# -------------------
+# Benchmark functions
+# -------------------
+
 # Creates a single CSV row
 benchmark() {
   print_benchmark_title
 
   # Row-header, row-implementaion-type
   OUTPUT="${OUTPUT}${CLIENT_IMPL},"
-
   NUM_OF_TASKS=$TASKS_BASE_COUNT
 
-  i=0
-  while [ $i -lt $(($NUM_OF_BENCHMARKS)) ]
+  local BENCHMARK=0
+  while [ $BENCHMARK -lt $(($NUM_OF_BENCHMARKS)) ]
   do
-    i=$(($i+1))
+    ((BENCHMARK++))
 
     if [[ $NUM_OF_TASKS -gt $MAX_REQUESTS ]]
     then
@@ -124,8 +153,8 @@ benchmark() {
       break
     fi
 
-    start_client "$CLIENT_IMPL"
-    NUM_OF_TASKS=$((${NUM_OF_TASKS}*2))
+    start_client
+    ((NUM_OF_TASKS*=2))
   done 
 
   # End of row
@@ -141,22 +170,22 @@ default_benchmarks() {
   trap exit_handler EXIT
   trap interrupt_handler INT
 
-  local CLI_MESSAGE="\nBenchmarking number of concurrent requests sent per second in Python VS Rust.\n\n"
+  local CLI_MESSAGE="\nBenchmarking number of concurrent requests sent per second.\n\n"
   CLI_MESSAGE="${CLI_MESSAGE}Running default benchmarks.\n"
   printf "$CLI_MESSAGE"
   seperator_line
 
   # Start server in background process
   SERVER_IMPL="flask"
-  start_server "$SERVER_IMPL"
+  start_server
 
   # Run Benchmarks against the server
   SAMPLE=0
   while [[ $SAMPLE -lt $NUM_OF_SAMPLES ]]
   do
-    for impl in "ureq_threads" "python"
+    for IMPL in "ureq_threads" "python"
     do 
-      CLIENT_IMPL=$impl
+      CLIENT_IMPL=$IMPL 
       benchmark
     done
     ((SAMPLE = SAMPLE + 1))
