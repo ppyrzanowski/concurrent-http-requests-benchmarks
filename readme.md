@@ -1,24 +1,14 @@
-# async_vs_threads (more like benchmarking performance of concurrent requests with dedicated `reqwest` http client)
+# concurrent_python_vs_rust_http_requests_benchmarks 
 
-## Results
+Benchmarking performance of x concurrent requests sent per second
 
-```
-(venv) ~/Dev/Rust/async_vs_threads/python-client (main ✗) python client.py
-22:55:06.379: Main    : creating 500 threads
-22:55:06.937: Main    : done creating threads
-22:55:08.041: Main    : all threads done in 0:00:01.661702
-(venv) ~/Dev/Rust/async_vs_threads/python-client (main ✗)
-```
 
 ## TODO
 
-- Add task performance export option as csv
-- Parse/Plot exported task performance with python or excel
 - Create small blog-post or writeup
 
-https://crates.io/crates/opentelemetry
-https://crates.io/crates/tracing-timing
 
+---
 
 ## SYSTEM CHANGES FOR FLAMEGRAPH PROFILING
 > For my own sanity
@@ -53,7 +43,10 @@ exit
 ```
 
 
-### Sources
+## Sources
+
+https://crates.io/crates/opentelemetry
+https://crates.io/crates/tracing-timing
 
 https://blog.logrocket.com/an-introduction-to-profiling-a-rust-web-application/
 
