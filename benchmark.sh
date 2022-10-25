@@ -1,14 +1,44 @@
 #!/bin/bash
 
+clean_up () {
+  shutdown_server
+  write_result
+  printf "Done\n"
+}
+
+# Executed before `exit` terminates
+exit_handler () {
+  printf "Cleaning up and writing results...\n"
+  clean_up
+}
+
+# Handle Ctrl-C (SIGINT) signal
+interrupt_handler () {
+  trap SIGINT # Restore signal handling for SIGINT
+  printf "\n"
+  seperator_line
+  printf "Benchmarks interrupted.\n"
+  exit 1
+}
+
+# Shell seperator for better readability
 seperator_line() {
-  printf "%s\n" "---------------------------------------------------"
+  printf "%s\n" "--------------------------------------------------------------"
+}
+
+# Prettyprint benchmark title to shell
+print_benchmark_title() {
+  A=$(printf "%0.1s" " "{1..50});
+  A="[Benchmark]${A}"
+  B="$CLIENT_IMPL"
+
+  echo "${A:0:-${#B}} $B"
 }
 
 # Writes the results to a file.
-# TODO: export as CSV format
 write_result() {
+    printf "Written output to ${benchmark_results_path}\n"
     printf "$output\n" >> "$benchmark_results_path"
-
 }
 
 # Starts the server receiving our requests, the requests should be handled 
@@ -18,15 +48,13 @@ start_server() {
   case "$1" in
   # flask = python flask server
   "flask")
-    cd ./python-server-flask/
-    . ./venv/bin/activate
+    . ./python-server-flask/venv/bin/activate
     mkdir -p logs
-    # Redirect logs of flask app to ./logs/{timestamp}.log
-    flask --app server run >>./logs/$(date -d "today" +"%Y%m%d%H%M").log 2>&1 & SERVER_PID=$! 
+    # Redirect logs of flask app
+    flask --app ./python-server-flask/server run >>./python-server-flask/logs/$(date -d "today" +"%Y%m%d%H%M").log 2>&1 & SERVER_PID=$! 
     # Wait for server to start in background
     sleep 3
     deactivate
-    cd ./..
     ;;
   # async = python asyncio server
   "async")
@@ -35,17 +63,18 @@ start_server() {
     ;;
   *)
     printf "Please provide backend type (flask | async)\n"
+    exit 1
     ;;
   esac
 }
 
-# Starts the client, sending x requests as fast as possible to our server.
+# Starts the client, sending x requests as fast as possible by given implementaion to our server.
 start_client() {
   case "$1" in
   "ureq_threads")
     # Compile client once
     if [[ $CLIENT_COMPILED -lt 1 ]]; then
-      printf "Compiling client...\n"
+      printf "(Compiling client...)\n"
       export RUSTFLAGS="$RUSTFLAGS -Awarnings"
       cargo build -r --bin ureq_threads
       CLIENT_COMPILED=1
@@ -53,15 +82,13 @@ start_client() {
     execution_time=$( ./target/release/ureq_threads $NUM_OF_TASKS ) 
     ;;
   "python")
-    cd ./python-client/
-    . ./venv/bin/activate
-    execution_time=$( python client.py $NUM_OF_TASKS )
-    deactivate
-    cd ./..
+    # trap "clean_up_python; interrupt_handler" "INT"
+    . ./python-client/venv/bin/activate
+    execution_time=$( python ./python-client/client.py $NUM_OF_TASKS )
     ;;
   *)
     printf "Please provide client type (ureq_threads | python)\n"
-    return 1
+    exit 1
     ;;
   esac 
 
@@ -71,13 +98,15 @@ start_client() {
 
 # Stop the server after benchmarks are done.
 shutdown_server() {
-  kill "$SERVER_PID"
-  printf "Shutdown server done."
+  if [[ -n $SERVER_PID ]]; then
+    kill "$SERVER_PID"
+    printf "Shutdown server done.\n"
+  fi
 }
 
 # Benchmarks a single row
 benchmark() {
-  printf "Starting benchmark for ${CLIENT_IMPL}\n"
+  print_benchmark_title
 
   # Row-header, row-implementaion-type
   output="${output}${CLIENT_IMPL},"
@@ -105,13 +134,12 @@ benchmark() {
   seperator_line
 }
 
-# TODO: Finish later
-custom_benchmarks() {
-  printf "Not implemented."
-  exit 1
-}
-
+# Executes all predefined benchmarks
 default_benchmarks() {
+  # fires on `kill $$` and `exit`
+  trap exit_handler EXIT
+  trap interrupt_handler INT
+
   cli_message="${cli_message}Running default benchmarks.\n"
   printf "$cli_message"
   seperator_line
@@ -129,35 +157,29 @@ default_benchmarks() {
     done
     ((sample = sample + 1))
   done
-
-  shutdown_server
-
-  write_result
+  exit 0
 }
 
 
 # Script entrypoint
 
-export CLIENT_COMPILED=0
-export SERVER_IMPL="$1"
-export CLIENT_IMPL="$2"
-NUM_OF_SAMPLES=5       # Number of benchmark-cycle repetitions for avarage calculation
-NUM_OF_BENCHMARKS=10     # Number of columns with doubling number of task per column (Factor)
-NUM_OF_TASKS="${3:-1}"  # Number of requests to send by client (default: 1)
-MAX_REQUESTS=2000       # For safety
+export CLIENT_COMPILED=0  # 1 - If the rust client was already compiled by previous benchmark iteration
+export SERVER_IMPL=""
+export CLIENT_IMPL=""
+NUM_OF_SAMPLES=2          # Number of benchmark-cycle repetitions for avarage calculation
+NUM_OF_BENCHMARKS=2       # Number of columns with doubling number of task per column (Factor)
+# NUM_OF_TASKS="${3:-1}"    # Number of requests to send by client (default: 1)
+MAX_REQUESTS=2000         # For safety, max allowed number of requests to try send at once
 
-# `output` holds the benchmark results seperated by comma (single-line)
+# `output` holds the benchmark results seperated by comma (CSV)
 output=""
 
 
-cli_message="Benchmarking number of concurrent requests sent per second in Python VS Rust.\n\n"
+cli_message="\nBenchmarking number of concurrent requests sent per second in Python VS Rust.\n\n"
 
 # Benchmark results path
 mkdir -p benchmarks
 benchmark_results_path=benchmarks/$(date -d "today" +"%Y%m%d%H%M").csv
+touch "$benchmark_results_path"
 
-if [[ -z $SERVER_IMPL || -z $CLIENT_IMPL ]]; then
-  default_benchmarks
-else
-  custom_benchmarks
-fi
+default_benchmarks
