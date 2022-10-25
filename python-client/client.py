@@ -21,8 +21,10 @@ def main():
     t = int(sys.argv[1])
     # format = "%(asctime)s.%(msecs)03d: %(message)s"
     format = '%(asctime)s.%(msecs)d %(name)s %(levelname)s %(message)s'
-    Path("./logs").mkdir(parents=True, exist_ok=True)
-    filepath = f"logs/{datetime.now().strftime('%Y%m%d%H%M')}.log"
+    parrent_dir = Path(__file__).parent.resolve()
+    logs_path = parrent_dir.joinpath("logs")
+    logs_path.mkdir(parents=True, exist_ok=True)
+    filepath = logs_path.joinpath(f"{datetime.now().strftime('%Y%m%d%H%M')}.log")
     logging.basicConfig(
         filename=filepath,
         filemode="a",

@@ -49,7 +49,7 @@ start_server() {
   # flask = python flask server
   "flask")
     . ./python-server-flask/venv/bin/activate
-    mkdir -p logs
+    mkdir -p ./python-server-flask/logs
     # Redirect logs of flask app
     flask --app ./python-server-flask/server run >>./python-server-flask/logs/$(date -d "today" +"%Y%m%d%H%M").log 2>&1 & SERVER_PID=$! 
     # Wait for server to start in background
@@ -165,20 +165,21 @@ default_benchmarks() {
 }
 
 
-# Script entrypoint
+# ---------------------------
+# BENCHMARK SCRIPT ENTRYPOINT
+# ---------------------------
 
-export CLIENT_COMPILED=0    # 1 - If the rust client was already compiled by previous benchmark iteration
-export SERVER_IMPL=""
-export CLIENT_IMPL=""
 
-TASKS_BASE_COUNT="${1:-1}"  # Start number of requests to send by client (arg1 ( $arg1 <= $MAX_REQUESTS ) 
-                            # otherwise default is 1; )
+# Configuration variables
+MAX_REQUESTS=2000           # For safety, max allowed number of requests to try send at once
 NUM_OF_SAMPLES=2            # Number of benchmark-cycle repetitions for avarage calculation
 NUM_OF_BENCHMARKS=2         # Number of columns with doubling number of task per column (Factor)
-MAX_REQUESTS=2000           # For safety, max allowed number of requests to try send at once
+TASKS_BASE_COUNT="${1:-1}"  # Start number of requests to send by client (arg1 ( $arg1 <= $MAX_REQUESTS ) 
+                            # otherwise default is 1; )
 
+# Script global variables
 OUTPUT=""                   # Holds the benchmark results seperated by comma (CSV)
-
+CLIENT_COMPILED=${CLIENT_COMPILED:-0}
 
 # Benchmark results path
 mkdir -p benchmarks
