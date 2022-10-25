@@ -38,9 +38,9 @@ seperator_line() {
 
 # Prettyprint benchmark title to shell
 print_benchmark_title() {
-  A=$(printf "%0.1s" " "{1..50});
+  local A=$(printf "%0.1s" " "{1..50});
   A="[Benchmark]${A}"
-  B="$CLIENT_IMPL"
+  local B="$CLIENT_IMPL"
 
   printf "${A:0:-${#B}} $B\n"
 }
@@ -52,8 +52,8 @@ print_benchmark_title() {
 
 # Writes the results to a file.
 write_result() {
-    printf "Written output to ${BENCHMARK_RESULTS_FILEPATH}\n"
-    printf "$OUTPUT\n" >> "$BENCHMARK_RESULTS_FILEPATH"
+  printf "Written output to ${BENCHMARK_RESULTS_FILEPATH}\n"
+  printf "$OUTPUT\n" >> "$BENCHMARK_RESULTS_FILEPATH"
 }
 
 
@@ -206,15 +206,14 @@ default_benchmarks() {
 
 
 # Configuration variables
-MAX_REQUESTS=2000           # For safety, max allowed number of requests to try send at once
-NUM_OF_SAMPLES=2            # Number of benchmark-cycle repetitions for avarage calculation
-NUM_OF_BENCHMARKS=2         # Number of columns with doubling number of task per column (Factor)
-TASKS_BASE_COUNT="${1:-1}"  # Start number of requests to send by client (arg1 ( $arg1 <= $MAX_REQUESTS ) 
-                            # otherwise default is 1; )
+MAX_REQUESTS=${MAX_REQUESTS:=2}           # For safety, max allowed number of requests to try send at once.
+NUM_OF_SAMPLES=${NUM_OF_SAMPLES:=2}       # Number of benchmark-cycle repetitions for avarage calculation.
+NUM_OF_BENCHMARKS=${NUM_OF_BENCHMARKS:=2} # Number of columns with doubling number of task per column (Factor).
+TASKS_BASE_COUNT=${TASKS_BASE_COUNT:=1}   # Start number of requests to send by client ( x <= $MAX_REQUESTS ).
+CLIENT_COMPILED=${CLIENT_COMPILED:-0}     # If the rust client was already compiled. Switch to 1 if no compilation is needed.
 
 # Script global variables
-OUTPUT=""                   # Holds the benchmark results seperated by comma (CSV)
-CLIENT_COMPILED=${CLIENT_COMPILED:-0}
+OUTPUT=""                                 # Holds the benchmark results seperated by comma (CSV).
 
 # Benchmark results path
 mkdir -p benchmarks
