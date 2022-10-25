@@ -149,7 +149,7 @@ benchmark() {
 
     if [[ $NUM_OF_TASKS -gt $MAX_REQUESTS ]]
     then
-      printf "Number of tasks ($NUM_OF_TASKS) exceeds max allowed number of reqeusts ($MAX_REQUESTS)!"
+      printf "Number of tasks ($NUM_OF_TASKS) exceeds max allowed number of reqeusts ($MAX_REQUESTS)!\n"
       break
     fi
 
@@ -176,11 +176,11 @@ default_benchmarks() {
   seperator_line
 
   # Start server in background process
-  SERVER_IMPL="flask"
+  SERVER_IMPL="python-flask"
   start_server
 
   # Run Benchmarks against the server
-  SAMPLE=0
+  local SAMPLE=0
   while [[ $SAMPLE -lt $NUM_OF_SAMPLES ]]
   do
     for IMPL in "ureq_threads" "python"
@@ -206,11 +206,11 @@ default_benchmarks() {
 
 
 # Configuration variables
-MAX_REQUESTS=${MAX_REQUESTS:=2}           # For safety, max allowed number of requests to try send at once.
+MAX_REQUESTS=${MAX_REQUESTS:=1200}        # For safety, max allowed number of requests to try send at once.
 NUM_OF_SAMPLES=${NUM_OF_SAMPLES:=2}       # Number of benchmark-cycle repetitions for avarage calculation.
 NUM_OF_BENCHMARKS=${NUM_OF_BENCHMARKS:=2} # Number of columns with doubling number of task per column (Factor).
 TASKS_BASE_COUNT=${TASKS_BASE_COUNT:=1}   # Start number of requests to send by client ( x <= $MAX_REQUESTS ).
-CLIENT_COMPILED=${CLIENT_COMPILED:-0}     # If the rust client was already compiled. Switch to 1 if no compilation is needed.
+CLIENT_COMPILED=${CLIENT_COMPILED:=0}     # If the rust client was already compiled. Switch to 1 if no compilation is needed.
 
 # Script global variables
 OUTPUT=""                                 # Holds the benchmark results seperated by comma (CSV).
