@@ -6,7 +6,7 @@ build:
     cargo build -r --bin ureq_threads
 
 benchmark:
-    bash ./benchmark.sh flask ureq_threads
+    bash ./benchmark.sh
   
   
 
