@@ -1,9 +1,7 @@
-target/
-*/venv/
-*/.venv/
-test.csv
-results.csv
 benchmarks/
-*/logs/
 
-*/__pycache__
+rust-client/target/
+
+*/env/
+*/logs/
+*/__pycache__/
