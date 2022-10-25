@@ -1,6 +1,8 @@
-# concurrent_python_vs_rust_http_requests_benchmarks 
+# concurrent_http_requests_benchmarks 
 
-Benchmarking performance of x concurrent requests sent per second
+Benchmarking performance of x concurrent requests sent per second by given implementation.
+
+
 
 
 ## TODO
