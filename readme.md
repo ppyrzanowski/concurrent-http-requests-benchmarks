@@ -30,10 +30,47 @@ cargo install just
 just install-python-env
 ```
 
+
+## Commands
+
 - Run benchmarks:
 ```bash
 just benchmark
+```
 
+- Start dev-server:
+```bash
+just py-server
+[enter]
+```
+
+- Stop dev-server:
+```bash
+just py-server-kill
+```
+
+- Start Jaeger (log-collector server)
+```
+just jaeger
+```
+
+## Implementations
+
+### Python
+
+-
+
+### Rust
+
+```bash
+# Start jaeger tracing server
+just jaeger
+```
+
+```bash
+# Compile and run rust threaded ureq implementation with one request
+cd ./rust-client
+cargo run -- --trace-remote --trace-stdout threads-ureq 1
 ```
 
 

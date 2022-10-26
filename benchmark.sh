@@ -109,15 +109,15 @@ start_client() {
     if [[ $CLIENT_COMPILED -lt 1 ]]; then
       printf "(Compiling client...)\n"
       export RUSTFLAGS="$RUSTFLAGS -Awarnings"
-      cargo build -r --manifest-path ./rust-client/Cargo.toml --bin ureq_threads
+      cargo build -r --manifest-path ./rust-client/Cargo.toml
       CLIENT_COMPILED=1
     fi
-    EXECUTION_TIME=$( ./rust-client/target/release/ureq_threads $NUM_OF_TASKS ) 
+    EXECUTION_TIME=$( ./rust-client/target/release/rust_request_clients threads-ureq $NUM_OF_TASKS ) 
     ;;
   "python")
     # trap "clean_up_python; interrupt_handler" "INT"
     . ./python-client/env/bin/activate
-    EXECUTION_TIME=$( python ./python-client/client.py $NUM_OF_TASKS )
+    EXECUTION_TIME=$( python3 ./python-client/client.py $NUM_OF_TASKS )
     ;;
   *)
     printf "Please provide client type (ureq_threads | python)\n"
