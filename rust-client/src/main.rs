@@ -13,6 +13,10 @@ enum Implementation {
 
 #[derive(Parser)]
 struct Args {
+    /// What implementation to execute
+    #[arg(value_enum)]
+    implementation: Implementation,
+
     /// Number of concurrent requests to send
     #[clap(value_parser)]
     n: i32,
@@ -24,19 +28,19 @@ struct Args {
     /// Send tracing to jaeger at 1.0.0.127:5000
     #[clap(long, value_parser)]
     trace_remote: bool,
-
-    /// What implementation to execute
-    #[arg(value_enum)]
-    implementation: Implementation,
 }
 
 fn main() {
-    let args = Args::parse();
+    let args: Args = Args::parse();
     let n = args.n;
 
     // enable logging if needed
     if args.trace_stdout || args.trace_remote {
-        init_tracing("ureq_threads", args.trace_stdout, args.trace_remote);
+        init_tracing(
+            &format!("{:#?}", args.implementation),
+            args.trace_stdout,
+            args.trace_remote,
+        );
     }
 
     let root_span = span!(tracing::Level::INFO, "app_start");
