@@ -104,7 +104,7 @@ shutdown_server() {
 start_client() {
   local EXECUTION_TIME=0
   case "$CLIENT_IMPL" in
-  "ureq_threads")
+  "ureq-threads"|"hyper-tokio")
     # Compile client once
     if [[ $CLIENT_COMPILED -lt 1 ]]; then
       printf "(Compiling client...)\n"
@@ -112,7 +112,7 @@ start_client() {
       cargo build -r --manifest-path ./rust-client/Cargo.toml
       CLIENT_COMPILED=1
     fi
-    EXECUTION_TIME=$( ./rust-client/target/release/rust_request_clients threads-ureq $NUM_OF_TASKS ) 
+    EXECUTION_TIME=$( ./rust-client/target/release/rust_request_clients $CLIENT_IMPL $NUM_OF_TASKS ) 
     ;;
   "python")
     # trap "clean_up_python; interrupt_handler" "INT"
@@ -183,7 +183,7 @@ default_benchmarks() {
   local SAMPLE=0
   while [[ $SAMPLE -lt $NUM_OF_SAMPLES ]]
   do
-    for IMPL in "ureq_threads" "python"
+    for IMPL in "ureq-threads" "hyper-tokio" "python"
     do 
       CLIENT_IMPL=$IMPL 
       benchmark

@@ -1,6 +1,7 @@
 benchmarks/
 
 rust-client/target/
+rust-client-dev/target/
 
 */env/
 */logs/

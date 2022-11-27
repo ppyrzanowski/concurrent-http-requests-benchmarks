@@ -127,3 +127,5 @@ https://crates.io/crates/tracing-timing
 https://blog.logrocket.com/an-introduction-to-profiling-a-rust-web-application/
 
 https://github.com/flamegraph-rs/flamegraph
+
+[Max parallel requests per domain using h2 configuration option #2641](https://github.com/hyperium/hyper/issues/2641)

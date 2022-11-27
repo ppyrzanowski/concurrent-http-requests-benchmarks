@@ -9,21 +9,16 @@ edition = "2021"
 debug = true
 
 [dependencies]
-scheduled-thread-pool = "0.2.6"
-reqwest = { version = "0.11.11", features = ["json", "blocking"] }
-chrono = "0.4.22"
-tokio = { version = "1.20.1", features = ["full", "tracing"]}
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tabled = "0.8.0"
-csv = "1.1.6"
-console-subscriber = "0.1.7"
+tokio = { version = "1.20.1", features = ["full", "tracing", "rt-multi-thread"]}
+
 tracing = "0.1.36"
 tracing-subscriber = "0.3.15"
+tracing-opentelemetry = "0.17.4"
 opentelemetry = {version = "0.17.0", features = ["rt-tokio"]}
 opentelemetry-jaeger = {version = "0.16.0", features = ["rt-tokio"]}
-tracing-opentelemetry = "0.17.4"
-futures = "0.3.24"
-ureq = "2.5.0"
-surf = "2.3.2"
+
 clap = { version = "4.0.18", features = ["derive"] }
+
+ureq = "2.5.0"
+reqwest = { version = "0.11", features = ["json"] }
+hyper = "0.14.23"

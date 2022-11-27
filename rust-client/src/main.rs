@@ -1,14 +1,15 @@
 mod implementations;
 mod utils;
 
-use crate::implementations::threads_ureq;
+use crate::implementations::{ureq_threads, hyper_tokio};
 use crate::utils::logging::init_tracing;
 use clap::{Parser, ValueEnum};
 use tracing::{info, span};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 enum Implementation {
-    ThreadsUreq,
+    UreqThreads,
+    HyperTokio,
 }
 
 #[derive(Parser)]
@@ -47,7 +48,8 @@ fn main() {
     let result = root_span.in_scope(|| {
         // run implementation
         let execution_time = match args.implementation {
-            Implementation::ThreadsUreq => threads_ureq::scedule(n, &root_span),
+            Implementation::UreqThreads => ureq_threads::scedule(n, &root_span),
+            Implementation::HyperTokio => hyper_tokio::scedule(n, &root_span)
         };
         info!("Done in {}ms", execution_time);
         execution_time
