@@ -60,7 +60,7 @@ just jaeger
 
 -
 
-### Rust
+### Rust (ureq_threads)
 
 ```bash
 # Start jaeger tracing server
@@ -73,6 +73,11 @@ cd ./rust-client
 cargo run -- --trace-remote --trace-stdout threads-ureq 1
 ```
 
+### Rust (hyper_tokio)
+Todo
+
+#### Notes
+Why do reqeusts made by `hyper` have 'keep-alive' on connection inspection with `ss`?
 
 
 ## TODO
