@@ -1,5 +1,7 @@
 use opentelemetry::global;
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{
+    filter::LevelFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt, Layer,
+};
 
 pub fn init_tracing(name: &str, to_stdout: bool, to_remote: bool) {
     let subscriber = tracing_subscriber::registry();
@@ -12,8 +14,12 @@ pub fn init_tracing(name: &str, to_stdout: bool, to_remote: bool) {
             .install_simple()
             .unwrap();
 
-        // Create a tracing layer with the configured tracer
-        Some(tracing_opentelemetry::layer().with_tracer(tracer))
+        // Create a tracing layer with the configured tracer, only log info
+        Some(
+            tracing_opentelemetry::layer()
+                .with_tracer(tracer)
+                .with_filter(LevelFilter::INFO),
+        )
     } else {
         None
     };

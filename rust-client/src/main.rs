@@ -1,10 +1,10 @@
 mod implementations;
 mod utils;
 
-use crate::implementations::{ureq_threads, hyper_tokio};
+use crate::implementations::{hyper_tokio, ureq_threads};
 use crate::utils::logging::init_tracing;
 use clap::{Parser, ValueEnum};
-use tracing::{info, span};
+use tracing::info;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
 enum Implementation {
@@ -35,7 +35,7 @@ fn main() {
     let args: Args = Args::parse();
     let n = args.n;
 
-    // enable logging if needed
+    // Enable logging if needed
     if args.trace_stdout || args.trace_remote {
         init_tracing(
             &format!("{:#?}", args.implementation),
@@ -44,18 +44,17 @@ fn main() {
         );
     }
 
-    let root_span = span!(tracing::Level::INFO, "app_start");
-    let result = root_span.in_scope(|| {
-        // run implementation
+    tracing::info_span!("app_start").in_scope(|| {
+        // Run implementation
         let execution_time = match args.implementation {
-            Implementation::UreqThreads => ureq_threads::scedule(n, &root_span),
-            Implementation::HyperTokio => hyper_tokio::scedule(n, &root_span)
+            Implementation::UreqThreads => ureq_threads::scedule(n),
+            Implementation::HyperTokio => hyper_tokio::scedule(n),
         };
         info!("Done in {}ms", execution_time);
-        execution_time
+
+        println!("{execution_time}");
     });
 
-    println!("{result}");
     // Send all buffered messages to remote collector
     opentelemetry::global::shutdown_tracer_provider();
 }

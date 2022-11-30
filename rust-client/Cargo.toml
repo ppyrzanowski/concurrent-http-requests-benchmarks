@@ -12,7 +12,7 @@ debug = true
 tokio = { version = "1.20.1", features = ["full", "tracing", "rt-multi-thread"]}
 
 tracing = "0.1.36"
-tracing-subscriber = "0.3.15"
+tracing-subscriber = "0.3.16"
 tracing-opentelemetry = "0.17.4"
 opentelemetry = {version = "0.17.0", features = ["rt-tokio"]}
 opentelemetry-jaeger = {version = "0.16.0", features = ["rt-tokio"]}
