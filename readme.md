@@ -82,6 +82,11 @@ Why do reqeusts made by `hyper` have 'keep-alive' on connection inspection with 
 
 ## TODO
 
+- Setup flask server on remote server
+- Gunicorn handle signals for communiation
+- Add nginx as reverse proxy
+- -> The Flask server was not optimized
+
 - Create small blog-post or writeup.
 - Rewrite benchmark script with python for cross platform testing.
 - Rewrite just recipes with python.

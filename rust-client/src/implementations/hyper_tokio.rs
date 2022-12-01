@@ -3,13 +3,13 @@ use std::{str::FromStr, time::Instant};
 use tokio::runtime::Runtime;
 use tracing::{info, Instrument};
 
-async fn runner(id: u32, client: Client<HttpConnector>, uri: Uri) {
+async fn runner(_id: u32, client: Client<HttpConnector>, uri: Uri) {
     info!("start request");
     let start = Instant::now();
     let _res = client.get(uri).await.unwrap();
     let elapsed = start.elapsed().as_millis();
 
-    info!(id, elapsed_ms = elapsed, "response");
+    info!(elapsed_ms = elapsed, "response");
 
     // Concatenate the body stream into a single buffer
     // let buf = hyper::body::to_bytes(res).await.unwrap();
@@ -29,9 +29,9 @@ pub fn scedule(n: i32) -> i32 {
 
             for id in 0..n as u32 {
                 let client = client.clone();
-                let url = Uri::from_str(&format!("http://127.0.0.1:5000/sleep/{}", id)).unwrap();
+                let url = Uri::from_str(&format!("http://127.0.0.1:8000/sleep/1")).unwrap();
 
-                let span = tracing::info_span!("request_task");
+                let span = tracing::info_span!("request_task", n = id);
                 let task = async move { runner(id, client, url).await };
 
                 tasks.push(tokio::spawn(task.instrument(span)));

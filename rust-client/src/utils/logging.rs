@@ -16,9 +16,7 @@ pub fn init_tracing(name: &str, to_stdout: bool, to_remote: bool) {
 
         // Create a tracing layer with the configured tracer, only log info
         Some(
-            tracing_opentelemetry::layer()
-                .with_tracer(tracer)
-                .with_filter(LevelFilter::INFO),
+            tracing_opentelemetry::layer().with_tracer(tracer), // .with_filter(LevelFilter::INFO),
         )
     } else {
         None

@@ -17,8 +17,8 @@ pub fn scedule(n: i32) -> i32 {
     let start = Instant::now();
     let mut threads = Vec::new();
     for id in 0..n as u32 {
-        let url = format!("http://127.0.0.1:5000/sleep/{}", id);
-        let request_span = tracing::info_span!("request_task");
+        let url = format!("http://127.0.0.1:8000/sleep/1");
+        let request_span = tracing::info_span!("request_task", n = id);
         threads.push(thread::spawn(move || {
             let _entered = request_span.entered();
             runner(id, &url)
